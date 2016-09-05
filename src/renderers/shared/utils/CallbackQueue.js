@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule CallbackQueue
+ * @flow
  */
 
 'use strict';
@@ -26,12 +27,14 @@ var invariant = require('invariant');
  * @implements PooledClass
  * @internal
  */
-function CallbackQueue() {
-  this._callbacks = null;
-  this._contexts = null;
-}
+class CallbackQueue<T> {
+  _callbacks: ?Array<() => void>;
+  _contexts: ?Array<T>;
 
-Object.assign(CallbackQueue.prototype, {
+  constructor() {
+    this._callbacks = null;
+    this._contexts = null;
+  }
 
   /**
    * Enqueues a callback to be invoked when `notifyAll` is invoked.
@@ -40,12 +43,12 @@ Object.assign(CallbackQueue.prototype, {
    * @param {?object} context Context to call `callback` with.
    * @internal
    */
-  enqueue: function(callback, context) {
+  enqueue(callback: () => void, context: T) {
     this._callbacks = this._callbacks || [];
-    this._contexts = this._contexts || [];
     this._callbacks.push(callback);
+    this._contexts = this._contexts || [];
     this._contexts.push(context);
-  },
+  }
 
   /**
    * Invokes all enqueued callbacks and clears the queue. This is invoked after
@@ -53,10 +56,10 @@ Object.assign(CallbackQueue.prototype, {
    *
    * @internal
    */
-  notifyAll: function() {
+  notifyAll() {
     var callbacks = this._callbacks;
     var contexts = this._contexts;
-    if (callbacks) {
+    if (callbacks && contexts) {
       invariant(
         callbacks.length === contexts.length,
         'Mismatched list of contexts in callback queue'
@@ -69,38 +72,35 @@ Object.assign(CallbackQueue.prototype, {
       callbacks.length = 0;
       contexts.length = 0;
     }
-  },
+  }
 
-  checkpoint: function() {
+  checkpoint() {
     return this._callbacks ? this._callbacks.length : 0;
-  },
+  }
 
-  rollback: function(len) {
-    if (this._callbacks) {
+  rollback(len: number) {
+    if (this._callbacks && this._contexts) {
       this._callbacks.length = len;
       this._contexts.length = len;
     }
-  },
+  }
 
   /**
    * Resets the internal queue.
    *
    * @internal
    */
-  reset: function() {
+  reset() {
     this._callbacks = null;
     this._contexts = null;
-  },
+  }
 
   /**
    * `PooledClass` looks for this.
    */
-  destructor: function() {
+  destructor() {
     this.reset();
-  },
+  }
+}
 
-});
-
-PooledClass.addPoolingTo(CallbackQueue);
-
-module.exports = CallbackQueue;
+module.exports = PooledClass.addPoolingTo(CallbackQueue);

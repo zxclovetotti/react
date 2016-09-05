@@ -206,4 +206,62 @@ describe('ReactTestRenderer', function() {
     expect(log).toEqual([null]);
   });
 
+  it('supports error boundaries', function() {
+    var log = [];
+    class Angry extends React.Component {
+      render() {
+        log.push('Angry render');
+        throw new Error('Please, do not render me.');
+      }
+      componentDidMount() {
+        log.push('Angry componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('Angry componentWillUnmount');
+      }
+    }
+
+    class Boundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {error: false};
+      }
+      render() {
+        log.push('Boundary render');
+        if (!this.state.error) {
+          return (
+            <div><button onClick={this.onClick}>ClickMe</button><Angry /></div>
+          );
+        } else {
+          return <div>Happy Birthday!</div>;
+        }
+      }
+      componentDidMount() {
+        log.push('Boundary componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('Boundary componentWillUnmount');
+      }
+      onClick() {
+        /* do nothing */
+      }
+      unstable_handleError() {
+        this.setState({error: true});
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Boundary />);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: ['Happy Birthday!'],
+    });
+    expect(log).toEqual([
+      'Boundary render',
+      'Angry render',
+      'Boundary render',
+      'Boundary componentDidMount',
+    ]);
+  });
+
 });

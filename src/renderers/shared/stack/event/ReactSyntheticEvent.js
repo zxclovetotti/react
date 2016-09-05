@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -6,12 +6,16 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
+ * Flow type for SyntheticEvent class that includes private properties
+ *
+ * @providesModule ReactSyntheticEvent
  * @flow
- * @providesModule ReactPropTypesSecret
  */
 
 'use strict';
 
-const ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
+export type DispatchConfig = any;
 
-module.exports = ReactPropTypesSecret;
+export class ReactSyntheticEvent extends SyntheticEvent {
+  dispatchConfig: DispatchConfig;
+}
